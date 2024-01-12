@@ -184,90 +184,15 @@ def distance(sample_Len, fw_Sample, ew_Sample, fw, ew):
             ans = sample_Len[value_abs_cnt] + few_add
     return ans
 
-
-# ---------------------------------------------------------------------------------------------------------
-# 時間の設定のフォーム
-global f_limit
-global_set()
-f = open("src/limit.txt", "r")
-f_limit = int(f.read())
-f.close()
-print("制限時間:%d" % f_limit)
-
-thread_app = threading.Thread(target=rootwin)
-thread_app.start()
-
-thread_setting = threading.Thread(target=setting.setting)
-thread_setting.start()
-
-print("カメラを起動中…")
-
-
-# カスケード分類器のパスを各変数に代入
-# pythonの実行
-fase_cascade_path = 'data\haarcascades\haarcascade_frontalface_default.xml'
-eye_cascade_path = 'data\haarcascades\haarcascade_eye.xml'
-# カスケード分類器の読み込み
-face_cascade = cv2.CascadeClassifier(fase_cascade_path)
-eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
-
-# Webカメラの準備（引数でカメラ指定、0は内臓カメラ）
-cap = cv2.VideoCapture(0)
-
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # カメラ画像の横幅を1280に設定
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # カメラ画像の縦幅を720に設定
-
-# もしカメラが起動していなかったら終了する
-if cap.isOpened() is False:
-    print("カメラが起動していないため終了しました")
-    sys.exit()
-
-FRAME_LINESIZE = 2       # 顔に四角を描画する際の線の太さ
-FRAME_RGB_G = (0, 255, 0)  # 四角形を描画する際の色を格納(緑)
-FRAME_RGB_B = (255, 0, 0)  # 四角形を描画する際の色を格納(青)
-mode_cnt = 0     # カウントの際に使用
-text_Change = 0  # cmの表記を画面上部に固定にするか、顔に追従するかの切り替え
-fw = 100    # 顔の大きさの初期値（起動時エラー回避のため初期値設定）
-fx = 100    # 顔のx座標の初期値
-fy = 100    # 顔のy座標の初期値
-ew = 100    # 目の大きさの初期値
-ex = 100    # 目のx座標の初期値
-ey = 100    # 目のy座標の初期値
-dis_Ans = 0  # 計測した距離を格納
-fw_count = []  # fwを一時的に格納（最頻値を出すために使用）
-ew_count = []  # ewを一時的に格納（最頻値を出すために使用）
-MODECOUNT = 50  # 最頻値を出すときの要素数（この値を変更することで計測値(cm)の正確性と計測にかかる時間が変化）
-# fwSample,ewSampleに対応した顔とカメラとの距離(cm)
-SAMPLE_LEN = [10,   15,  20,  30,  40,  50,  60,  70]
-FW_SAMPLE = [999, 999, 999, 999, 431, 348, 292, 253]       # 事前に計測した距離に対応する顔の大きさ
-EW_SAMPLE = [268, 214, 161, 118,  90,  62,  59,  54]       # 事前に計測した距離に対応する目の大きさ
-
-# cap = cv2.VideoCapture(0, cv2.CAP_MSMF)
-# cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-# cap.set(cv2.CAP_PROP_FPS, 10)           # カメラFPSを60FPSに設定
-# print cap.get(cv2.CAP_PROP_FPS)
-# print cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-# print cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
-
-
-# -----------------------------------------------------------
-
-
-
-
-#時間計測開始
-setting.time_start_click()
-
 # 無限ループで読み取った映像に変化を加える（1フレームごとに区切って変化）
 # count = 0
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
     if gend.flg == 1:
         return  # 終了フラグが立っていたら処理を終了する
     printcnt = 0
-    while True:
+    # while True:
         # 1秒に1回カメラ動作中と表示
-        if printcnt == 100:
+        if printcnt == 10:
             print("カメラ動作中")
             printcnt = 0
         else:
@@ -402,6 +327,70 @@ def build_gui():
     toggle_label.pack(pady=20)
 
 
+# ---------------------------------------------------------------------------------------------------------
+
+# アプリケーションの実行部分---------------------------------------------------------------------------------------------
+# 時間の設定のフォーム
+global f_limit
+global_set()
+f = open("src/limit.txt", "r")
+f_limit = int(f.read())
+f.close()
+print("制限時間:%d" % f_limit)
+
+thread_app = threading.Thread(target=rootwin)
+thread_app.start()
+
+thread_setting = threading.Thread(target=setting.setting)
+thread_setting.start()
+
+print("カメラを起動中…")
+
+
+# カスケード分類器のパスを各変数に代入
+# pythonの実行
+fase_cascade_path = 'data\haarcascades\haarcascade_frontalface_default.xml'
+eye_cascade_path = 'data\haarcascades\haarcascade_eye.xml'
+# カスケード分類器の読み込み
+face_cascade = cv2.CascadeClassifier(fase_cascade_path)
+eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
+
+# Webカメラの準備（引数でカメラ指定、0は内臓カメラ）
+cap = cv2.VideoCapture(0)
+
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # カメラ画像の横幅を1280に設定
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)  # カメラ画像の縦幅を720に設定
+
+# もしカメラが起動していなかったら終了する
+if cap.isOpened() is False:
+    print("カメラが起動していないため終了しました")
+    sys.exit()
+
+# Webカメラの初期設定-----------------------------------------------------------
+FRAME_LINESIZE = 2       # 顔に四角を描画する際の線の太さ
+FRAME_RGB_G = (0, 255, 0)  # 四角形を描画する際の色を格納(緑)
+FRAME_RGB_B = (255, 0, 0)  # 四角形を描画する際の色を格納(青)
+mode_cnt = 0     # カウントの際に使用
+text_Change = 0  # cmの表記を画面上部に固定にするか、顔に追従するかの切り替え
+fw = 100    # 顔の大きさの初期値（起動時エラー回避のため初期値設定）
+fx = 100    # 顔のx座標の初期値
+fy = 100    # 顔のy座標の初期値
+ew = 100    # 目の大きさの初期値
+ex = 100    # 目のx座標の初期値
+ey = 100    # 目のy座標の初期値
+dis_Ans = 0  # 計測した距離を格納
+fw_count = []  # fwを一時的に格納（最頻値を出すために使用）
+ew_count = []  # ewを一時的に格納（最頻値を出すために使用）
+MODECOUNT = 50  # 最頻値を出すときの要素数（この値を変更することで計測値(cm)の正確性と計測にかかる時間が変化）
+# fwSample,ewSampleに対応した顔とカメラとの距離(cm)
+SAMPLE_LEN = [10,   15,  20,  30,  40,  50,  60,  70]
+FW_SAMPLE = [999, 999, 999, 999, 431, 348, 292, 253]       # 事前に計測した距離に対応する顔の大きさ
+EW_SAMPLE = [268, 214, 161, 118,  90,  62,  59,  54]       # 事前に計測した距離に対応する目の大きさ
+# -------------------------------------------------------------------------------
+
+
+#時間計測開始
+setting.time_start_click()
 
 print("カメラを起動")
 thread_camera = threading.Thread(target=HealtheyeS, args=(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, text_Change, fx, fy, ex, ey, SAMPLE_LEN, FW_SAMPLE, EW_SAMPLE, MODECOUNT))
@@ -456,6 +445,7 @@ if gend.flg == 1:
     # password_input.passbox_end()
     print("正常に終了しました")
     sys.exit()
+# ------------------------------------------------------------------------------------------------------------------------
 # -----------------------------------------------------------
 # print("関数終了処理-------------------------------------------")
 # gtime_flg.flg = 1

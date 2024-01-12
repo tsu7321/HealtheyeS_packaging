@@ -332,10 +332,10 @@ def setting():
 
     #経過時間
     limit_label = tk.Label(setting_frame,text='経過時間:-',font=("",12))
-    #計測開始ボタン
-    time_start_btn = tk.Button(setting_frame,text='計測開始',command=lambda:time_start_click())
-    #計測停止ボタン
-    time_stop_btn = tk.Button(setting_frame,text='計測停止',command=lambda:time_stop_click())
+    # #計測開始ボタン
+    # time_start_btn = tk.Button(setting_frame,text='計測開始',command=lambda:time_start_click())
+    # #計測停止ボタン
+    # time_stop_btn = tk.Button(setting_frame,text='計測停止',command=lambda:time_stop_click())
     #再起動ボタン
     app_restart_btn = tk.Button(setting_frame,text='アプリを再起動',command=lambda:app_restart_click())
     #終了ボタン
