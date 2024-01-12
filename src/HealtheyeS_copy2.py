@@ -85,7 +85,6 @@ def rootwin():
 def restart_app():
     global f_limit
     while True:
-        
         if grestart_flg.flg == 1:
             #制限時間を更新
             f = open("src/limit.txt", "r")
@@ -265,9 +264,15 @@ setting.time_start_click()
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
     if gend.flg == 1:
         return  # 終了フラグが立っていたら処理を終了する
+    printcnt = 0
     while True:
-        print("カメラ動作中")
-        time.sleep(0.01)
+        # 1秒に1回カメラ動作中と表示
+        if printcnt == 100:
+            print("カメラ動作中")
+            printcnt = 0
+        else:
+            printcnt += 1
+        time.sleep(0.1)
         if gend.flg == 1:
             return  # 終了フラグが立っていたら処理を終了する
         # if gend.flg == 1:

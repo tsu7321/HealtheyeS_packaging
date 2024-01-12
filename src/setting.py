@@ -96,6 +96,7 @@ def label_update():
     # 経過時間ラベルの更新
     # 経過時間ラベルの更新
     # limitlablがないときの例外処理
+
     try:
         limit_label.config(text='経過時間:%d' % gtime_cnt.val)
         # print("経過時間:%d" % gtime_cnt.val)
@@ -178,6 +179,11 @@ def setting():
                 messagebox.showinfo('パスワード設定','パスワードを設定しました')
             # メッセージのOKボタンを押したらウインドウを閉じる
             if messagebox.OK:
+                # 現在のパスワードを表示
+                if password =="":
+                    password_now_label.configure(text='パスワードを設定していません',font=("",9))
+                else:
+                    password_now_label.configure(text='現在のパスワード:%s' % password,font=("",9))
                 # gwinlock.flgを0にして設定画面を操作できるようにする
                 formlock_off(pass_win)
         
@@ -235,6 +241,11 @@ def setting():
                 messagebox.showinfo('制限時間設定','制限時間を設定しました')
                 # メッセージのOKボタンを押したらウインドウを閉じる
                 if messagebox.OK:
+                    if limit =="":
+                        limit_now_label.configure(text='制限時間を設定していません',font=("",9))
+                    else:
+                        limit_now_label.configure(text='現在の制限時間:%s分' % limit,font=("",9))
+
                     # 設定画面を操作できるようにする
                     formlock_off(limit_win)
                     limit_win.destroy()
@@ -293,8 +304,9 @@ def setting():
     
     # メインウィンドウ
     setting_form = tk.Tk()
-    form_x = 500
-    form_y = form_x * 3 / 4
+    form_x = 405
+    form_y = 450
+    
     setting_form.geometry('%dx%d' % (form_x, form_y))
     setting_form.title('設定画面')
     # ×を押したときの処理
@@ -303,13 +315,23 @@ def setting():
     setting_frame = tk.Frame(setting_form,width=form_x,height=form_y)
     
     # パスワード設定
-    password_set_label = tk.Label(setting_frame,text='パスワードを設定できます')
+    password_set_label = tk.Label(setting_frame,text='パスワードを設定できます',font=("",12))
     password_set_btn = tk.Button(setting_frame,text='パスワード設定',command=lambda:password_set_click())
+    # 現在のパスワード
+    if f_password =="":
+        password_now_label = tk.Label(setting_frame,text='パスワードを設定していません',font=("",9))
+    else:
+        password_now_label = tk.Label(setting_frame,text='現在のパスワード:%s' % f_password,font=("",9))
     #制限時間の設定
-    limit_set_label = tk.Label(setting_frame,text='制限時間を設定できます')
+    limit_set_label = tk.Label(setting_frame,text='制限時間を設定できます',font=("",12))
     limit_set_btn = tk.Button(setting_frame,text='制限時間設定',command=lambda:limit_set_click())
+    if f_limit =="":
+        limit_now_label = tk.Label(setting_frame,text='制限時間を設定していません',font=("",9))
+    else:
+        limit_now_label = tk.Label(setting_frame,text='現在の制限時間:%s分' % f_limit,font=("",9))
+
     #経過時間
-    limit_label = tk.Label(setting_frame,text='経過時間:-')
+    limit_label = tk.Label(setting_frame,text='経過時間:-',font=("",12))
     #計測開始ボタン
     time_start_btn = tk.Button(setting_frame,text='計測開始',command=lambda:time_start_click())
     #計測停止ボタン
@@ -319,22 +341,28 @@ def setting():
     #終了ボタン
     app_end_btn = tk.Button(setting_frame,text='アプリを終了',command=lambda:setting_end())
 
-    # パスワード設定の配置
-    password_set_label.place(x=0,y=0)
-    password_set_btn.place(x=200,y=0)
+    # テキストの位置
+    label_place = 0
+    # ボタンの位置
+    btn_place = form_x*(3/5)
+    # パスワード設定の配置(y=0)
+    password_set_label.place(x=label_place,y=0)
+    password_now_label.place(x=label_place,y=20)# form_xの3/5の位置に配置
+    password_set_btn.place(x=btn_place,y=0,width=100,height=30)  # form_xの2/5の位置に配置
     # 制限時間設定の配置
-    limit_set_label.place(x=0,y=30)
-    limit_set_btn.place(x=200,y=30)
+    limit_set_label.place(x=label_place,y=50)
+    limit_now_label.place(x=label_place,y=70)
+    limit_set_btn.place(x=btn_place,y=50,width=100,height=30)
     # 経過時間ラベルの配置
-    limit_label.place(x=form_x*(7/10),y=form_x*(7/10))
-    # 計測開始ボタンの配置
-    time_start_btn.place(x=120,y=60)
-    # 計測停止ボタンの配置
-    time_stop_btn.place(x=120,y=100)
+    limit_label.place(x=form_x*(7/10),y=form_x*(9/10))
+    # # 計測開始ボタンの配置
+    # time_start_btn.place(x=120,y=60)
+    # # 計測停止ボタンの配置
+    # time_stop_btn.place(x=120,y=100)
     # 再起動ボタンの配置
-    app_restart_btn.place(x=180,y=120)
+    app_restart_btn.place(x=0,y=form_y*9/10)
     # 終了ボタンの配置
-    app_end_btn.place(x=0,y=60)
+    app_end_btn.place(x=form_x/2-40,y=form_y-150)
     
     setting_frame.pack()
     setting_form.after(1000,label_update)
