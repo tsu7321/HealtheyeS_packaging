@@ -1,6 +1,7 @@
 # HealtheyeS_packaging
 packaging
 
+v1.1.1  起動しないバグ修正
 
 v1.1.0  UIを変更
         計測開始・停止ボタンを廃止
