@@ -22,6 +22,8 @@ import time
 # import time_limit
 import setting
 #グローバル変数をセット
+import clock_thread_end_flg as gclock_thread_end # 時間計測スレッドの終了フラグ 0:継続 1:終了(flg)
+import setting_thread_end_flg as gsetting_thread_end # 設定画面スレッドの終了フラグ 0:継続 1:終了(flg)
 import form_lock_flg as gformlock # 設定入力画面を操作している間設定選択画面を操作できなくするフラグ 0:解除 1:ロック (flg)
 import end_flg_value as gend # 終了フラグ 0:継続 1:終了(flg)
 import time_limit_value as glimit   # 制限時間 (val)
@@ -34,10 +36,12 @@ import password_input
 # import mosaic
 # import refreshfream
 
-
+# 初期値を None に設定
+thread_setting = None
 
 # --------------------------------------------------------------------------------------------------------
 def global_set():
+    gsetting_thread_end.flg = 0 # 設定画面の終了フラグ 0:継続 1:終了(flg)
     gformlock.flg = 0 # 設定入力画面を操作している間設定選択画面を操作できなくするフラグ 0:解除 1:ロック (flg)
     gtime_cnt.val = 0   # 時間計測のカウント
     gend.flg = 0        # 終了フラグ 0:継続 1:終了
@@ -83,9 +87,28 @@ def rootwin():
 
 #再起動する関数
 def restart_app():
+    # pass
     global f_limit
-    while True:
+    global thread_setting
+    while gend.flg == 0:
+    #     # 再起動ボタンを押したら
         if grestart_flg.flg == 1:
+            # タイマーのスレッドを終了
+            setting.clock_thread_end()
+            print("clock_threadを終了しました")
+            # 設定画面のスレッドを終了
+            thread_setting.join()
+            print("thread_settingを終了しました")
+            grestart_flg.flg = 0
+            print("再起動します")
+            gsetting_thread_end.flg = 1
+        # スレッドの終了を確認してから再起動
+        if gsetting_thread_end.flg == 1:
+            setting.globalfile_reset()
+            thread_setting = threading.Thread(target=setting.setting)
+            thread_setting.start()
+            print("再起動しました")
+
             #制限時間を更新
             f = open("src/limit.txt", "r")
             f_limit = int(f.read())
@@ -98,8 +121,8 @@ def restart_app():
             # setting.time_start_click()
 
             HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, text_Change, fx, fy, ex, ey, SAMPLE_LEN, FW_SAMPLE, EW_SAMPLE, MODECOUNT)
-        elif gend.flg == 1:
-            break
+        # elif gend.flg == 1:
+        #     break
 
 
 # 入力された値(fw,ew)から距離を求める関数--------------------------------------------------------------------
@@ -187,17 +210,18 @@ def distance(sample_Len, fw_Sample, ew_Sample, fw, ew):
 # 無限ループで読み取った映像に変化を加える（1フレームごとに区切って変化）
 # count = 0
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
-    if gend.flg == 1:
-        return  # 終了フラグが立っていたら処理を終了する
     printcnt = 0
-    # while True:
-        # 1秒に1回カメラ動作中と表示
-        if printcnt == 10:
+    # 終了ボタンや再起動ボタンが押されたら処理を終了する
+    while gend.flg == 0 and grestart_flg.flg == 0:
+        # 5判定に1回カメラ動作中と表示
+        if printcnt == 5:
             print("カメラ動作中")
             printcnt = 0
         else:
             printcnt += 1
+        
         time.sleep(0.1)
+        
         if gend.flg == 1:
             return  # 終了フラグが立っていたら処理を終了する
         # if gend.flg == 1:
@@ -282,19 +306,19 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
         # 画像の表示
         # cv2.imshow('YourFace', frame)
 
-        # キー入力を10ms待つ
-        # 「Esc」を押すと無限ループから抜けて終了処理に移る
-        key = cv2.waitKey(10)
-        if key == 27:
-            break
-        elif key == ord('0'):       # 「0」を押すと距離が即座に出る
-            dis_Ans = distance(sampleLen, fwSample, ewSample, fw, ew)
-            print('%.2fcm\n' % dis_Ans)
-        elif key == ord('1'):
-            if textChange == 0:     # 現在cmのテキストを頭上に表示している場合、画面上部に固定化する
-                textChange = 1
-            else:                  # 現在cmのテキストを画面上部に固定化している場合、頭上に表示する
-                textChange = 0
+        # # キー入力を10ms待つ
+        # # 「Esc」を押すと無限ループから抜けて終了処理に移る
+        # key = cv2.waitKey(10)
+        # if key == 27:
+        #     break
+        # elif key == ord('0'):       # 「0」を押すと距離が即座に出る
+        #     dis_Ans = distance(sampleLen, fwSample, ewSample, fw, ew)
+        #     print('%.2fcm\n' % dis_Ans)
+        # elif key == ord('1'):
+        #     if textChange == 0:     # 現在cmのテキストを頭上に表示している場合、画面上部に固定化する
+        #         textChange = 1
+        #     else:                  # 現在cmのテキストを画面上部に固定化している場合、頭上に表示する
+        #         textChange = 0
     #time_limitの変更箇所-----------------------------------------
 
         #制限時間を超えたらパスワード入力画面を表示
@@ -332,7 +356,14 @@ def build_gui():
 # アプリケーションの実行部分---------------------------------------------------------------------------------------------
 # 時間の設定のフォーム
 global f_limit
+global f_password
 global_set()
+# 現パスワードを読み込む
+fp = open("src/password.txt", "r")
+fp_password = fp.read()
+fp.close()
+print("パスワード:%s" % fp_password)
+# 現制限時間を読み込む
 f = open("src/limit.txt", "r")
 f_limit = int(f.read())
 f.close()

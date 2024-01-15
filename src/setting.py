@@ -5,6 +5,8 @@ import time
 #ファイルをインポート
 import password_input
 #グローバル変数
+import clock_thread_end_flg as gclock_thread_end # 時間計測スレッドの終了フラグ 0:継続 1:終了(flg)
+import setting_thread_end_flg as gsetting_thread_end # 設定画面の終了フラグ 0:継続 1:終了(flg)
 import form_lock_flg as gformlock # 設定入力画面を操作している間設定選択画面を操作できなくするフラグ 0:解除 1:ロック (flg)
 import end_flg_value as gend # 終了フラグ 0:継続 1:終了(flg)
 import time_count_value as gtime_cnt # 時間計測のカウント(val)
@@ -12,10 +14,13 @@ import time_count_flg as gtime_flg # 計測フラグ 0:時間計測中 1:時間�
 import pass_sec_value as gpass_sec  # パスワードが解かれたか 0:ロック 1:解除 (flg)
 import restart_flg as grestart_flg # 再起動フラグ 0:再起動待機 1:再起動 (flg)
 
-
-
-# ファイル単体で実行する用初期化関数
-def global_set():
+def globalfile_reset():
+    global gend
+    global gformlock
+    global gtime_cnt
+    global gtime_flg
+    global gpass_sec
+    global grestart_flg
     gformlock.flg = 0
     gend.flg = 0
     gtime_cnt.val = 0
@@ -23,7 +28,24 @@ def global_set():
     gpass_sec.flg = 0
     grestart_flg.flg = 0    # 再起動フラグ 0:再起動待機 1:再起動 (flg)
 
+# ファイル単体で実行する用初期化関数
+def global_set():
+    global gend
+    global gformlock
+    global gtime_cnt
+    global gtime_flg
+    global gpass_sec
+    global grestart_flg
+    gformlock.flg = 0
+    gend.flg = 0
+    gtime_cnt.val = 0
+    gtime_flg.flg = 1
+    gpass_sec.flg = 0
+    grestart_flg.flg = 0    # 再起動フラグ 0:再起動待機 1:再起動 (flg)
+
+
 def time_start_click():
+    global thread_time_start
     if gformlock.flg == 0:
         f = open('src/limit.txt', 'r')
         f_limit = int(f.read())
@@ -192,7 +214,7 @@ def setting():
         if gformlock.flg == 0:
             # gwinlock.flgを1にして設定画面を操作できないようにする
             formlock_on()
-            pass_win = tk.Toplevel()
+            pass_win = tk.Tk()
             pass_win.title('パスワード設定')
             pass_win.geometry('400x300')
             # モーダルダイアログにする
@@ -220,7 +242,7 @@ def setting():
     def limit_set_click():
         # 決定ボタンを押したときの処理
         def limit_dicide_click():
-            # パスワードを取得
+            # 入力した制限時間を取得
             limit = limit_entry.get()
             #空白なら警告
             if limit == '':
@@ -248,13 +270,12 @@ def setting():
 
                     # 設定画面を操作できるようにする
                     formlock_off(limit_win)
-                    limit_win.destroy()
         
         if gformlock.flg == 0:
             # gwinlock.flgを1にして設定画面を操作できないようにする
             formlock_on()
             # フォームの生成
-            limit_win = tk.Toplevel()
+            limit_win = tk.Tk()
             limit_win.title('制限時間設定')
             limit_win.geometry('400x300')
             # モーダルダイアログにする
@@ -282,18 +303,26 @@ def setting():
     def app_restart_click():
         if gformlock.flg == 0:
             grestart_flg.flg = 1
-            print("thread_time_startを終了しました")
-    
+            # print("thread_time_startを終了しました")
+            time_stop_click()
+            print("タイマーを止めました")
+            setting_form.quit()
+            print("設定のウインドウを閉じました")
+
+
     # ウインドウの×を押したときの処理（タイマーを止めてからウインドウを閉じる）
     def delete_window():
         time_stop_click()
         setting_form.destroy()
 
 #----------------------------------------------------------------------------------
-    
     global limit_label
     global f_limit
     global f_password
+    # global setting_end_flg
+    
+    gsetting_thread_end.flg = 0
+    
     f = open('src/limit.txt', 'r')
     f_limit = int(f.read())
     f.close()
@@ -306,7 +335,6 @@ def setting():
     setting_form = tk.Tk()
     form_x = 405
     form_y = 450
-    
     setting_form.geometry('%dx%d' % (form_x, form_y))
     setting_form.title('設定画面')
     # ×を押したときの処理
@@ -368,13 +396,31 @@ def setting():
     setting_form.after(1000,label_update)
     time_start_click()
 
+
     setting_form.mainloop()
+
+def clock_thread_end():
+    thread_time_start.join()
     
 if __name__ == '__main__':
     global_set()
     # setting()
     thread1 = threading.Thread(target=setting)
     thread1.start()
-    
-    
-    
+    # 終了フラグが立つまでループ(再起動用のループ)
+    while gend.flg == 0:
+        # 再起動ボタンを押したら
+        if grestart_flg.flg == 1:
+            # 設定画面のスレッドを終了
+            thread_time_start.join()
+            print("thread_time_startを終了しました")
+            thread1.join()
+            grestart_flg.flg = 0
+            print("再起動します")
+            gsetting_thread_end.flg = 1
+        # スレッドを終了してから再起動
+        if gsetting_thread_end.flg == 1:
+            globalfile_reset()
+            thread1 = threading.Thread(target=setting)
+            thread1.start()
+            print("再起動しました")
