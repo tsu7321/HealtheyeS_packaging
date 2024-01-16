@@ -38,7 +38,10 @@ import password_input
 # import refreshfream
 
 # 初期値を None に設定
-thread_setting = None
+# thread_setting = None
+# thread_passbox = None
+# thread_setting = threading.Thread(target=setting.setting)
+# thread_passbox = threading.Thread(target=password_input.passbox_tk)
 
 # --------------------------------------------------------------------------------------------------------
 def global_set():
@@ -93,6 +96,7 @@ def restart_app():
     # pass
     global f_limit
     global thread_setting
+    global thread_passbox
     while gend.flg == 0:
     #     # 再起動ボタンを押したら
         if grestart_flg.flg == 1:
@@ -213,6 +217,7 @@ def distance(sample_Len, fw_Sample, ew_Sample, fw, ew):
 # 無限ループで読み取った映像に変化を加える（1フレームごとに区切って変化）
 # count = 0
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
+    global thread_passbox
     printcnt = 0
     f = open('src/limit.txt', 'r')
     f_limit = int(f.read())
@@ -353,14 +358,14 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
                 #メッセージを表示
                 # messagebox.showinfo('時間制限','制限時間を超えました')
                 
-                thread_passbox = threading.Thread(target=password_input.passbox_tk)
-                thread_passbox.start()
-                # password_input.passbox_tk()
+                # thread_passbox = threading.Thread(target=password_input.passbox_tk)
+                # thread_passbox.start()
+                password_input.passbox_tk()
                 
                 print("モザイクとパスワードを出す")
         
         if gpass_sec.flg == 1:
-            thread_passbox.join()
+            # thread_passbox.join()
             print("thread_passboxを終了しました")
             toggle_visibility_off()
             grestart_flg.flg = 1

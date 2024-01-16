@@ -1,4 +1,5 @@
 import tkinter as tk
+import customtkinter as ctk 
 import timeset
 import threading
 
@@ -52,8 +53,8 @@ def pass_open():
                     gpass_sec.flg = 1
                     formlock_off()
                     # HealtheyeS.toggle_visibility_off()
-                    # passbox_form.quit()
-                    passbox_form.destroy()
+                    passbox_form.quit()
+                    # passbox_form.destroy()
                 else:
                     warning_pass_label.config(text='パスワードが違います')
 
@@ -67,55 +68,69 @@ def passbox_tk():
     global passset_text
     global warning_pass_label
     
+    # Selecting GUI theme - dark, light , system (for system default) 
+    ctk.set_appearance_mode("White") 
+
+    # Selecting color theme - blue, green, dark-blue 
+    ctk.set_default_color_theme("blue") 
+
     #パスワード入力画面を操作している間設定画面を操作できなくする
     formlock_on()
-    passbox_form = tk.Tk()
-    passbox_form.geometry('250x200')
-    passbox_form.title('パスワードを入力してください')
+    passbox_form = ctk.CTk() 
+    passbox_form.geometry("350x250")
+    passbox_form.title("パスワード入力")
     # 常に最前面に表示
     passbox_form.attributes("-topmost", True)
     
     
     # #×で閉じられないようにする
     passbox_form.protocol("WM_DELETE_WINDOW", click_close)
-    
+    # フレームの生成
+    passbox_frame = ctk.CTkFrame(master=passbox_form) 
+    passbox_frame.pack(pady=20,padx=40,fill='both',expand=True)
     # フォームのパスワード設定ラベル
-    pass_label = tk.Label(passbox_form,text='パスワードを設定してください(半角数字4桁)')
-    pass_label.pack()
+    pass_label = ctk.CTkLabel(master=passbox_frame,text='パスワードを入力してください')
+    pass_label.pack(pady=12,padx=10)
     # 入力の制限
     validation_pass = passbox_form.register(timeset.on_validate_pass)
-
     # パスワード入力のテキストボックス
-    passset_text = tk.Entry(passbox_form, validate="key", validatecommand=(
-        validation_pass, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-    passset_text.pack()
+    passset_text= ctk.CTkEntry(master=passbox_frame, validate="key", validatecommand=(
+        validation_pass, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'),placeholder_text="半角数字4桁",show="*") 
+    passset_text.pack(pady=12,padx=10) 
+    # パスワード入力のテキストボックス
+    # passset_text = tk.Entry(passbox_form, validate="key", validatecommand=(
+    #     validation_pass, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
+    # passset_text.pack()
     
     warning_pass_label = tk.Label(passbox_form,text='')
     warning_pass_label.pack()
 
     # 入力決定のボタン
+    # timeset_button = ctk.CTkButton(master=passbox_frame,text='決定',command=lambda: pass_open())
+    # timeset_button.pack(pady=12,padx=10)
     timeset_button = tk.Button(
-        passbox_form,
+        passbox_frame,
         text='決定',
         command=lambda: pass_open()
-    ).pack()
+    )
+    timeset_button.pack(pady=12,padx=10)
     
     
     passbox_form.mainloop()
 
 
-def passbox():
+# def passbox():
 
 
-    passbox_tk()
+#     passbox_tk()
 
-    # フォームの生成
-    thread_passbox = threading.Thread(target=passbox_tk)
-    thread_passbox.start()
+#     # フォームの生成
+#     thread_passbox = threading.Thread(target=passbox_tk)
+#     thread_passbox.start()
 
 if __name__ == '__main__':
     global_set()
     f = open('src/password.txt', 'r')
     password = f.read()
     f.close()
-    passbox()
+    passbox_tk()
