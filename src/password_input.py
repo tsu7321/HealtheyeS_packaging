@@ -1,5 +1,9 @@
 import tkinter as tk
 import timeset
+import threading
+
+# import HealtheyeS
+
 #グローバル変数をセット
 import form_lock_flg as gformlock # 設定入力画面を操作している間設定選択画面を操作できなくするフラグ 0:解除 1:ロック (flg)
 import pass_sec_value as gpass_sec  # パスワードが解かれたか 0:ロック 1:解除 (flg)
@@ -47,7 +51,9 @@ def pass_open():
                 if int(input_pass) == password:
                     gpass_sec.flg = 1
                     formlock_off()
-                    passbox_form.quit()
+                    # HealtheyeS.toggle_visibility_off()
+                    # passbox_form.quit()
+                    passbox_form.destroy()
                 else:
                     warning_pass_label.config(text='パスワードが違います')
 
@@ -56,18 +62,19 @@ def pass_open():
     else:
         return
 
-
-def passbox():
+def passbox_tk():
     global passbox_form
     global passset_text
     global warning_pass_label
-
+    
     #パスワード入力画面を操作している間設定画面を操作できなくする
     formlock_on()
-    # フォームの生成
     passbox_form = tk.Tk()
     passbox_form.geometry('250x200')
     passbox_form.title('パスワードを入力してください')
+    # 常に最前面に表示
+    passbox_form.attributes("-topmost", True)
+    
     
     # #×で閉じられないようにする
     passbox_form.protocol("WM_DELETE_WINDOW", click_close)
@@ -96,6 +103,19 @@ def passbox():
     
     passbox_form.mainloop()
 
+
+def passbox():
+
+
+    passbox_tk()
+
+    # フォームの生成
+    thread_passbox = threading.Thread(target=passbox_tk)
+    thread_passbox.start()
+
 if __name__ == '__main__':
     global_set()
+    f = open('src/password.txt', 'r')
+    password = f.read()
+    f.close()
     passbox()

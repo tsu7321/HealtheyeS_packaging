@@ -74,9 +74,9 @@ def clock():
     
     # time_limit_count = 0
     while gtime_flg.flg == 0 and gend.flg == 0:
-        f = open('src/limit.txt', 'r')
-        f_limit = int(f.read())
-        f.close()
+        # f = open('src/limit.txt', 'r')
+        # f_limit = int(f.read())
+        # f.close()
         
         # 制限時間を過ぎたとき
         if gtime_cnt.val >= f_limit:
@@ -102,15 +102,16 @@ def clock():
         # 時間計測終了
         # time_limit_count = 0
         # gtime_cnt.val = 0
-        #メッセージを表示
-        messagebox.showinfo('時間制限','制限時間を超えました')
+        # #メッセージを表示
+        # messagebox.showinfo('時間制限','制限時間を超えました')
 
         print("時間計測を終了しました")
         if f_password =="":
             print("パスワード認証をスキップ")
-        else:
-            password_input.passbox_end()
+        # else:
+        #     password_input.passbox_end()
     else:
+        
         print("計測停止")
     
 def label_update():

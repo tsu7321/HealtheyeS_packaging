@@ -16,6 +16,7 @@ import statistics   # 最頻値
 import tkinter as tk
 import threading
 import time
+from tkinter import messagebox
 
 
 # import timeset
@@ -48,6 +49,8 @@ def global_set():
     gtime_flg.flg = 1   # 計測フラグ 0:時間計測中 1:時間計測終了
     gpass_sec.flg = 0   # パスワードが解かれたか 0:ロック 1:解除 (flg)
     grestart_flg.flg = 0    # 再起動フラグ 0:再起動待機 1:再起動 (flg)
+    
+    
 # 表示---------------------------------------------------------------------------------------------------------------------
 def toggle_visibility_on():
     # ウィンドウの透明度を設定 (0: 完全透明, 1: 完全不透明)
@@ -211,6 +214,11 @@ def distance(sample_Len, fw_Sample, ew_Sample, fw, ew):
 # count = 0
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
     printcnt = 0
+    f = open('src/limit.txt', 'r')
+    f_limit = int(f.read())
+    f.close()
+    print("制限時間:%d" % f_limit)
+
     # 終了ボタンや再起動ボタンが押されたら処理を終了する
     while gend.flg == 0 and grestart_flg.flg == 0:
         # 5判定に1回カメラ動作中と表示
@@ -270,30 +278,35 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
             mode_cnt = 0
             dis_Ans = distance(sampleLen, fwSample, ewSample,
                             statistics.mode(fw_count), statistics.mode(ew_count))
-            if dis_Ans == -1:
-                # ぼかしの処理
-                toggle_visibility_on()
-                # コマンドライン
-                print('10cm以下です!近すぎます!!\n')
-                MODE = 20
-            elif dis_Ans == -2:
-                # ぼかしの処理
-                toggle_visibility_off()
-                # if f_limit > gtime_cnt.val:
-                print('70cm以上離れています!!\n')
-                MODE = 50
+                # 制限時間が過ぎているならパス
+            if f_limit <= gtime_cnt.val:
+                pass
+            # 距離によって表示を変える
             else:
-                if dis_Ans < 30:
+                if dis_Ans == -1:
                     # ぼかしの処理
                     toggle_visibility_on()
                     # コマンドライン
-                    print('顔が近いので少し離れてください')
+                    print('10cm以下です!近すぎます!!\n')
                     MODE = 20
-                elif dis_Ans >= 30:
+                elif dis_Ans == -2:
+                    # ぼかしの処理
                     toggle_visibility_off()
                     # if f_limit > gtime_cnt.val:
-                    print('%.2fcm\n' % dis_Ans)    # 小数第２位まで出力
+                    print('70cm以上離れています!!\n')
                     MODE = 50
+                else:
+                    if dis_Ans < 30:
+                        # ぼかしの処理
+                        toggle_visibility_on()
+                        # コマンドライン
+                        print('顔が近いので少し離れてください')
+                        MODE = 20
+                    elif dis_Ans >= 30:
+                        toggle_visibility_off()
+                        # if f_limit > gtime_cnt.val:
+                        print('%.2fcm\n' % dis_Ans)    # 小数第２位まで出力
+                        MODE = 50
 
     # カウントのリセット
             fw_count = []
@@ -324,9 +337,9 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
         #制限時間を超えたらパスワード入力画面を表示
         # if f_limit <= gtime_cnt.val:
         if gtime_flg.flg == 0:
-            f = open('src/limit.txt', 'r')
-            f_limit = int(f.read())
-            f.close()
+            # f = open('src/limit.txt', 'r')
+            # f_limit = int(f.read())
+            # f.close()
             if f_limit <= gtime_cnt.val:
                 gtime_flg.flg = 1
                 # gtime_cnt.val = 0
@@ -335,13 +348,28 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
                 # thread2.start()
                 # mosaic()
                 # password_input.passbox()
+                toggle_visibility_on()
+                print("画面を覆う")
+                #メッセージを表示
+                # messagebox.showinfo('時間制限','制限時間を超えました')
+                
+                thread_passbox = threading.Thread(target=password_input.passbox_tk)
+                thread_passbox.start()
+                # password_input.passbox_tk()
+                
                 print("モザイクとパスワードを出す")
-            
+        
+        if gpass_sec.flg == 1:
+            thread_passbox.join()
+            print("thread_passboxを終了しました")
+            toggle_visibility_off()
+            grestart_flg.flg = 1
+            gpass_sec.flg = 0
         
         if gend.flg == 1:
             break
-        if gpass_sec.flg == 1:
-            pass
+        # if gpass_sec.flg == 1:
+        #     pass
         # print("end:%d" % gend.flg)
 
 def build_gui():
@@ -362,12 +390,12 @@ global_set()
 fp = open("src/password.txt", "r")
 fp_password = fp.read()
 fp.close()
-print("パスワード:%s" % fp_password)
+print("初期設定のパスワード:%s" % fp_password)
 # 現制限時間を読み込む
 f = open("src/limit.txt", "r")
 f_limit = int(f.read())
 f.close()
-print("制限時間:%d" % f_limit)
+print("初期設定の制限時間:%d" % f_limit)
 
 thread_app = threading.Thread(target=rootwin)
 thread_app.start()
