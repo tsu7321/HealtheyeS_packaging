@@ -17,7 +17,7 @@ import tkinter as tk
 import threading
 import time
 from tkinter import messagebox
-
+import customtkinter as ctk
 
 # import timeset
 # import time_limit
@@ -32,6 +32,7 @@ import time_count_value as gtime_cnt    # 時間計測のカウント (val)
 import time_count_flg as gtime_flg  # 計測フラグ 0:時間計測中 1:時間計測終了 (flg)
 import pass_sec_value as gpass_sec # 入力されたパスワード (val)
 import restart_flg as grestart_flg # 再起動フラグ 0:再起動待機 1:再起動 (flg)
+import password_windowup_flg as gpass_windowup # パスワード入力画面を表示する
 
 import password_input
 # import mosaic
@@ -52,9 +53,86 @@ def global_set():
     gtime_flg.flg = 1   # 計測フラグ 0:時間計測中 1:時間計測終了
     gpass_sec.flg = 0   # パスワードが解かれたか 0:ロック 1:解除 (flg)
     grestart_flg.flg = 0    # 再起動フラグ 0:再起動待機 1:再起動 (flg)
+    visibility_flg = 0  # 画面の表示フラグ 0:透過 1:表示
     
     
 # 表示---------------------------------------------------------------------------------------------------------------------
+def restart_after():
+    global grestart_flg
+    global root
+    global newend_flg
+    # if f_limit <= gtime_cnt.val and first == 0:
+    #     # print("全画面")
+    #     first = 1
+    #     rootwin.root.focus_force()
+    if gpass_windowup == 1:
+        setting.setting_end()
+    if gpass_sec.flg == 1 and gend.flg == 0:
+        password_input.passbox_form.quit()
+        
+    if visibility_flg == 0:
+        toggle_visibility_off()
+    elif visibility_flg == 1:
+        toggle_visibility_on()
+        
+    if grestart_flg.flg == 1:
+        grestart_flg.flg = 0
+        setting.setting_form.quit()
+        setting.time_stop_click()
+        print("タイマーを止めました")
+        # setting.setting_form.quit()
+        setting.setting_form.destroy()
+        print("設定のウインドウを閉じました")
+        time.sleep(3)
+        setting()
+        grestart_flg.flg = 0
+
+    elif gend.flg == 1:
+        if gsetting_thread_end.flg == 1:
+            print("settingend通った")
+            # password_input.passbox_form.quit()
+            # setting.setting_form.quit()
+            # setting.setting_form.destroy()
+            # print("設定のウインドウを閉じました")
+            # setting.time_stop_click()
+            # print("タイマーを止めました")
+            # setting.setting_form.quit()
+            # setting.setting_form.destroy()
+            
+            print("rootを終了します")
+            # pass
+            print("rootをquit")
+            root.quit()
+            print("thread_appを終了します")
+            # thread_app.join()
+            print("thread_appを終了しました")
+            newend_flg = 1
+                
+                
+        else:
+            print("通った")
+            # password_input.passbox_form.quit()
+            setting.setting_form.quit()
+            # setting.setting_form.destroy()
+            print("設定のウインドウを閉じました")
+            setting.time_stop_click()
+            print("タイマーを止めました")
+            # setting.setting_form.quit()
+            # setting.setting_form.destroy()
+            
+            print("rootを終了します")
+            # pass
+            print("rootをquit")
+            root.quit()
+            print("thread_appを終了します")
+            # thread_app.join()
+            print("thread_appを終了しました")
+            newend_flg = 1
+            # root.destroy()
+
+
+    else:
+        root.after(1000,restart_after)
 def toggle_visibility_on():
     # ウィンドウの透明度を設定 (0: 完全透明, 1: 完全不透明)
     root.attributes("-alpha", 0.97)
@@ -62,24 +140,31 @@ def toggle_visibility_on():
 def toggle_visibility_off():
     # ウィンドウの透明度を設定 (0: 完全透明, 1: 完全不透明)
     root.attributes("-alpha", 0)
-def endroot():
-    if gend.flg == 1:
-        root.destroy()
-    root.after(100,endroot)
+# def endroot():
+#     if gend.flg == 1:
+#         # root.quit()
+#         pass
+#     root.after(100,endroot)
 def rootwin():
     global root
+    global visibility_flg
+    global first
+    first = 0
     root = tk.Tk()
     root.title("注意画面")
     # ウィンドウの初期設定
     # ウィンドウの表示
     root.deiconify()
-
     # ウィンドウを透明クリック可能にする
+    # タイトルバーを非表示にする
+    root.overrideredirect(True)
+    
     root.wm_attributes("-transparentcolor", "white")
-
+    root.geometry("{0}x{1}+0+0".format(3000, 3000))
     # ウィンドウの初期設定
     # 画面全体
-    root.attributes("-fullscreen", True)
+    # root.attributes("-zoomed", "1")
+    # root.attributes("-fullscreen", True)
     # タスクバー
     # root.overrideredirect(True)
     # 最前面
@@ -88,8 +173,11 @@ def rootwin():
     root.bind("<B1-Motion>", lambda event: "break")
     root.bind("<Configure>", lambda event: "break")
     toggle_visibility_off()
-    root.after(100,endroot)
+    visibility_flg = 0
+    # root.after(100,endroot)
+    root.after(1000,restart_after)
     root.mainloop()
+    # del root
 
 #再起動する関数
 def restart_app():
@@ -217,7 +305,13 @@ def distance(sample_Len, fw_Sample, ew_Sample, fw, ew):
 # 無限ループで読み取った映像に変化を加える（1フレームごとに区切って変化）
 # count = 0
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
+    def focus():
+        print("ふぉーかす")
+        root.focus_force()
+    
     global thread_passbox
+    global visibility_flg
+    global gpass_windowup
     printcnt = 0
     f = open('src/limit.txt', 'r')
     f_limit = int(f.read())
@@ -353,29 +447,42 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
                 # thread2.start()
                 # mosaic()
                 # password_input.passbox()
-                toggle_visibility_on()
+                
+                visibility_flg = 1
+                # toggle_visibility_on()
+                focus()
+                root.focus_force()
                 print("画面を覆う")
+                break
                 #メッセージを表示
                 # messagebox.showinfo('時間制限','制限時間を超えました')
                 
                 # thread_passbox = threading.Thread(target=password_input.passbox_tk)
                 # thread_passbox.start()
-                password_input.passbox_tk()
+                # gpass_windowup = 1
+                # password_input.passbox_tk()
                 
                 print("モザイクとパスワードを出す")
         
-        if gpass_sec.flg == 1:
-            # thread_passbox.join()
-            print("thread_passboxを終了しました")
-            toggle_visibility_off()
-            grestart_flg.flg = 1
-            gpass_sec.flg = 0
-        
+                if gpass_sec.flg == 1 and gend.flg == 0:
+                    # thread_passbox.join()
+                    print("thread_passboxを終了しました")
+                    visibility_flg = 1
+                    # toggle_visibility_off()
+                    # grestart_flg.flg = 1
+                    gpass_sec.flg = 0
         if gend.flg == 1:
             break
         # if gpass_sec.flg == 1:
         #     pass
         # print("end:%d" % gend.flg)
+    if f_limit <= gtime_cnt.val:
+        
+        root.focus_force()
+        password_input.passbox_tk()
+        visibility_flg = 0
+        gend.flg = 1
+        
 
 def build_gui():
     # GUIの構築をここに記述
@@ -391,6 +498,8 @@ def build_gui():
 global f_limit
 global f_password
 global_set()
+visibility_flg = 0
+newend_flg = 0
 # 現パスワードを読み込む
 fp = open("src/password.txt", "r")
 fp_password = fp.read()
@@ -478,7 +587,7 @@ print("カメラを起動しました")
 #     print("終了します")
     
 restart_app()
-if gend.flg == 1:
+if gend.flg == 1 and newend_flg == 1:
     print("thread_cameraを終了します")
     thread_camera.join()
     print("thread_cameraを終了待ち")
@@ -498,13 +607,13 @@ if gend.flg == 1:
     print("cv2.destroyAllWindows()を実行しました")
     
 
-    print("thread_appを終了します")
-    thread_app.join()
-    print("thread_appを終了しました")
+    # print("thread_appを終了します")
+    # thread_app.join()
+    # print("thread_appを終了しました")
     # OpenCVのウィンドウをすべて閉じる
-    print("rootを終了します")
-    root.quit()
-    print("rootを終了しました")
+    # print("rootを終了します")
+    # root.quit()
+    # print("rootを終了しました")
 
     # password_input.passbox_end()
     print("正常に終了しました")

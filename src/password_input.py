@@ -9,6 +9,7 @@ import threading
 import form_lock_flg as gformlock # 設定入力画面を操作している間設定選択画面を操作できなくするフラグ 0:解除 1:ロック (flg)
 import pass_sec_value as gpass_sec  # パスワードが解かれたか 0:ロック 1:解除 (flg)
 import end_flg_value as gend        # 終了フラグ 0:継続 1:終了(flg)
+import password_form_end_flg as gpass_form_end # パスワード入力画面が閉じられたか 0:閉じられていない 1:閉じられた(flg)
 
 
 def global_set():
@@ -24,8 +25,11 @@ def formlock_off():
 def passbox_end():
     print("パスワードのウインドウを閉じました")
     passbox_form.quit()
+    gpass_form_end.flg = 1
 
 def pass_open():
+    global gpass_sec
+    
     timeset.value_check(passset_text,warning_pass_label)
     #数値の入力方式が正しいか判定
     if timeset.value_check(passset_text,warning_pass_label) == True:
@@ -43,6 +47,7 @@ def pass_open():
             gpass_sec.flg = 1
             formlock_off()
             passbox_form.quit()
+            passbox_form.destroy()
         else:
             # パスワードが設定されている場合
             if input_pass != "":
@@ -54,6 +59,9 @@ def pass_open():
                     formlock_off()
                     # HealtheyeS.toggle_visibility_off()
                     passbox_form.quit()
+                    passbox_form.destroy()
+                    print("パスワードが一致しました")
+                    
                     # passbox_form.destroy()
                 else:
                     warning_pass_label.config(text='パスワードが違います')
@@ -68,6 +76,7 @@ def passbox_tk():
     global passset_text
     global warning_pass_label
     
+    gpass_form_end.flg = 0
     # Selecting GUI theme - dark, light , system (for system default) 
     ctk.set_appearance_mode("White") 
 
@@ -108,7 +117,7 @@ def passbox_tk():
     # 入力決定のボタン
     # timeset_button = ctk.CTkButton(master=passbox_frame,text='決定',command=lambda: pass_open())
     # timeset_button.pack(pady=12,padx=10)
-    timeset_button = tk.Button(
+    timeset_button = ctk.CTkButton(
         passbox_frame,
         text='決定',
         command=lambda: pass_open()
@@ -117,6 +126,7 @@ def passbox_tk():
     
     
     passbox_form.mainloop()
+    # del passbox_form
 
 
 # def passbox():

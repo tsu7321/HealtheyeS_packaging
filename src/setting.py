@@ -15,6 +15,8 @@ import time_count_value as gtime_cnt # 時間計測のカウント(val)
 import time_count_flg as gtime_flg # 計測フラグ 0:時間計測中 1:時間計測終了(flg)
 import pass_sec_value as gpass_sec  # パスワードが解かれたか 0:ロック 1:解除 (flg)
 import restart_flg as grestart_flg # 再起動フラグ 0:再起動待機 1:再起動 (flg)
+import password_form_end_flg as gpass_form_end # パスワード入力画面が閉じられたか 0:閉じられていない 1:閉じられた(flg)
+import password_windowup_flg as gpass_windowup # パスワード入力画面を起動する
 
 def globalfile_reset():
     global gend
@@ -44,6 +46,7 @@ def global_set():
     gtime_flg.flg = 1
     gpass_sec.flg = 0
     grestart_flg.flg = 0    # 再起動フラグ 0:再起動待機 1:再起動 (flg)
+    gpass_form_end.flg = 0
 
 
 def time_start_click():
@@ -61,6 +64,7 @@ def time_start_click():
                 # thread_time_start = threading.Thread(target=time_limit.clock)
                 thread_time_start = threading.Thread(target=clock)
                 thread_time_start.start()
+                print("thread_time_startを開始しました")
                 # time_limit.clock()
                 print("計測開始")
         
@@ -118,18 +122,24 @@ def clock():
     
 def label_update():
     global limit_label
+    global nokoritime
     # 経過時間ラベルの更新
     # 経過時間ラベルの更新
     # limitlablがないときの例外処理
-
+    if nokoritime <= 0:
+        nokoritime = 0
+    else:
+        nokoritime -= 1
     try:
-        limit_label.configure(text='残り時間:%d' % gtime_cnt.val)
+        limit_label.configure(text='残り時間:%d' % nokoritime)
         # print("経過時間:%d" % gtime_cnt.val)
     except NameError:
         pass
     setting_form.after(1000,label_update)
 def setting_end():
     global setting_form
+    global gend
+    global gpass_windowup
     if gformlock.flg == 0:
         #パスワードを再取得
         fp = open('src/password.txt', 'r')
@@ -139,24 +149,49 @@ def setting_end():
         if f_password =="":
             print("パスワード認証をスキップ")
             gend.flg = 1 #終了フラグを立てる
+            print("パスワードフラグ：%d" % gpass_sec.flg)
+            setting_form.quit()
             print("設定のウインドウを閉じました")
             # print("setting endflg:%d" % gend.flg)
             thread_time_start.join()
             print("thread_time_startを閉じました")
-            setting_form.quit()
-            setting_form.destroy()
+            
+            # setting_form.destroy()
         else:
         # print(gpass_sec.flg)
             password_input.passbox_tk()
+            print(gpass_sec.flg)
         if gpass_sec.flg == 1:
             gend.flg = 1 #終了フラグを立てる
-            print("設定のウインドウを閉じました")
             thread_time_start.join()
             print("thread_time_startを閉じました")
+            print("おわりフラグ：%d" % gend.flg)
             setting_form.quit()
-            setting_form.destroy()
+            print("設定のウインドウを閉じました")
+            gsetting_thread_end.flg = 1
+            
+            
+            # setting_form.destroy()
 
-
+def restart_after():
+    global grestart_flg
+    if grestart_flg.flg == 1:
+        grestart_flg.flg = 0
+        setting_form.quit()
+        time_stop_click()
+        print("タイマーを止めました")
+        setting_form.quit()
+        setting_form.destroy()
+        print("設定のウインドウを閉じました")
+        time.sleep(3)
+        setting()
+        grestart_flg.flg = 0
+    elif gpass_sec.flg == 1:
+        password_input.passbox_form.quit()
+    else:
+        setting_form.after(1000,restart_after)
+        
+    
 def setting():
     global gend
     global setting_form
@@ -192,145 +227,72 @@ def setting():
         form.destroy()
     # ----------------------------------------------------------------------------------
     # パスワード設定ボタンを押したときの処理
-    def password_set_click():
-        def pass_dicide_click():
-            # パスワードを取得
-            password = pass_entry.get()
-            # パスワードをpassword.txtに保存
-            f = open('src/password.txt', 'w')
-            f.write(str(password))
-            f.close()
-            
-            #空白なら警告
-            if password == '':
-                #メッセージを表示
-                messagebox.showinfo('パスワード設定','パスワードなしで設定しました')
-            else:
-                #メッセージを表示
-                messagebox.showinfo('パスワード設定','パスワードを設定しました')
-            # メッセージのOKボタンを押したらウインドウを閉じる
-            if messagebox.OK:
-                # # 現在のパスワードを表示
-                # if password =="":
-                #     password_now_label.configure(text='パスワードを設定していません',font=("",9))
-                # else:
-                #     password_now_label.configure(text='現在のパスワード:%s' % password,font=("",9))
-                # gwinlock.flgを0にして設定画面を操作できるようにする
-                formlock_off(pass_win)
-        
-
-        
-        if gformlock.flg == 0:
-            # gwinlock.flgを1にして設定画面を操作できないようにする
-            formlock_on()
-            pass_win = tk.Tk()
-            pass_win.title('パスワード設定')
-            pass_win.geometry('400x300')
-            # モーダルダイアログにする
-            # pass_win.grab_set()
-            #ウインドウの×を押したときの処理
-            pass_win.protocol("WM_DELETE_WINDOW", lambda: formlock_off(pass_win))
-            # パスワード設定ラベル
-            dic_label = tk.Label(pass_win,text='パスワードを設定してください(半角数字4桁)')
-            dic_label.place(x=0,y=0)
-            
-            validation_pass = pass_win.register(on_validate)
-            # パスワード入力のテキストボックス
-            pass_entry = tk.Entry(pass_win, validate="key", validatecommand=(
-                validation_pass, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-            pass_entry.pack()
-            #警告ラベル
-            warning_label = tk.Label(pass_win,text='')
-            warning_label.place(x=0,y=40)
-            #決定ボタン
-            pass_decide_btn = tk.Button(pass_win,text='決定',command=lambda:pass_dicide_click())
-            pass_decide_btn.place(x=0,y=60)
+    def pass_dicide_click():
+        print("パスワード設定ボタンを押しました")
+        # パスワードを取得
+        password = password_entry.get()
+        print(password)
+        # パスワードをpassword.txtに保存
+        f = open('src/password.txt', 'w')
+        f.write(str(password))
+        f.close()
+        #空白なら警告
+        if password == '':
+            #メッセージを表示
+            messagebox.showinfo('パスワード設定','パスワードなしで設定しました')
         else:
-            pass
-        
-    def limit_set_click():
-        # 決定ボタンを押したときの処理
-        def limit_dicide_click():
-            # 入力した制限時間を取得
-            limit = limit_entry.get()
-            #空白なら警告
-            if limit == '':
-                messagebox.showinfo('制限時間設定','制限時間を設定してください(分)')
-                #limit_winを最前面へ
-                limit_win.lift()
-                return
-            else:
-                #分
-                # limit_minut = int(limit) * 60
-                #秒
-                limit_minut = int(limit)
-                # 制限時間をlimit.txtに保存
-                f = open('src/limit.txt', 'w')
-                f.write(str(limit_minut))
-                f.close()
-                #メッセージを表示
-                messagebox.showinfo('制限時間設定','制限時間を設定しました')
-                # メッセージのOKボタンを押したらウインドウを閉じる
-                # if messagebox.OK:
-                #     if limit =="":
-                #         limit_now_label.configure(text='制限時間を設定していません',font=("",9))
-                #     else:
-                #         limit_now_label.configure(text='現在の制限時間:%s分' % limit,font=("",9))
+            #メッセージを表示
+            messagebox.showinfo('パスワード設定','パスワードを設定しました')
 
-                #     # 設定画面を操作できるようにする
-                #     formlock_off(limit_win)
-        
-        if gformlock.flg == 0:
-            # gwinlock.flgを1にして設定画面を操作できないようにする
-            formlock_on()
-            # フォームの生成
-            limit_win = tk.Tk()
-            limit_win.title('制限時間設定')
-            limit_win.geometry('400x300')
-            # モーダルダイアログにする
-            # limit_win.grab_set()
-            #ウインドウの×を押したときの処理
-            limit_win.protocol("WM_DELETE_WINDOW", lambda: formlock_off(limit_win))
-            limit_win.focus_set()
-            # 制限時間設定ラベル
-            dic_label = tk.Label(limit_win,text='制限時間を設定してください(半角数字4桁)')
-            dic_label.place(x=0,y=0)
-            
-            validation_pass = limit_win.register(on_validate)
-            # 制限時間入力のテキストボックス
-            limit_entry = tk.Entry(limit_win, validate="key", validatecommand=(
-                validation_pass, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W'))
-            limit_entry.pack()
-            #警告ラベル
-            warning_label = tk.Label(limit_win,text='')
-            warning_label.place(x=0,y=40)
-            #決定ボタン
-            limit_decide_btn = tk.Button(limit_win,text='決定',command=lambda:limit_dicide_click())
-            limit_decide_btn.place(x=0,y=60)
-    
+    def limit_dicide_click():
+        # 入力した制限時間を取得
+        limit = limit_entry.get()
+        #空白なら警告
+        if limit == '':
+            messagebox.showinfo('制限時間設定','制限時間を設定してください(分)')
+            #limit_winを最前面へ
+            setting_form.lift()
+            return
+        else:
+            #分
+            # limit_minut = int(limit) * 60
+            #秒
+            limit_minut = int(limit)
+            # 制限時間をlimit.txtに保存
+            f = open('src/limit.txt', 'w')
+            f.write(str(limit_minut))
+            f.close()
+            #メッセージを表示
+            messagebox.showinfo('制限時間設定','制限時間を設定しました')
+
+
     
     def app_restart_click():
         if gformlock.flg == 0:
             grestart_flg.flg = 1
-            # print("thread_time_startを終了しました")
-            time_stop_click()
-            print("タイマーを止めました")
-            setting_form.quit()
-            print("設定のウインドウを閉じました")
+            # # print("thread_time_startを終了しました")
+            # time_stop_click()
+            # print("タイマーを止めました")
+            # setting_form.quit()
+            # print("設定のウインドウを閉じました")
 
 
     # ウインドウの×を押したときの処理（タイマーを止めてからウインドウを閉じる）
     def delete_window():
         time_stop_click()
+        gend.flg = 1
         setting_form.destroy()
 
 #----------------------------------------------------------------------------------
     global limit_label
     global f_limit
     global f_password
+    global nokoritime
     # global setting_end_flg
     
     gsetting_thread_end.flg = 0
+    
+    
     
     f = open('src/limit.txt', 'r')
     f_limit = int(f.read())
@@ -340,70 +302,8 @@ def setting():
     f_password = fp.read()
     fp.close()
     
-    # # メインウィンドウ
-    # setting_form = tk.Tk()
-    # form_x = 405
-    # form_y = 450
-    # setting_form.geometry('%dx%d' % (form_x, form_y))
-    # setting_form.title('設定画面')
-    # # ×を押したときの処理
-    # setting_form.protocol("WM_DELETE_WINDOW", lambda: delete_window())
-    # #フレームの作成
-    # setting_frame = tk.Frame(setting_form,width=form_x,height=form_y)
+    nokoritime = int(f_limit)
     
-    # # パスワード設定
-    # password_set_label = tk.Label(setting_frame,text='パスワードを設定できます',font=("",12))
-    # password_set_btn = tk.Button(setting_frame,text='パスワード設定',command=lambda:password_set_click())
-    # # 現在のパスワード
-    # if f_password =="":
-    #     password_now_label = tk.Label(setting_frame,text='パスワードを設定していません',font=("",9))
-    # else:
-    #     password_now_label = tk.Label(setting_frame,text='現在のパスワード:%s' % f_password,font=("",9))
-    # #制限時間の設定
-    # limit_set_label = tk.Label(setting_frame,text='制限時間を設定できます',font=("",12))
-    # limit_set_btn = tk.Button(setting_frame,text='制限時間設定',command=lambda:limit_set_click())
-    # if f_limit =="":
-    #     limit_now_label = tk.Label(setting_frame,text='制限時間を設定していません',font=("",9))
-    # else:
-    #     limit_now_label = tk.Label(setting_frame,text='現在の制限時間:%s分' % f_limit,font=("",9))
-
-    # #経過時間
-    # limit_label = tk.Label(setting_frame,text='経過時間:-',font=("",12))
-    # # #計測開始ボタン
-    # # time_start_btn = tk.Button(setting_frame,text='計測開始',command=lambda:time_start_click())
-    # # #計測停止ボタン
-    # # time_stop_btn = tk.Button(setting_frame,text='計測停止',command=lambda:time_stop_click())
-    # #再起動ボタン
-    # app_restart_btn = tk.Button(setting_frame,text='アプリを再起動',command=lambda:app_restart_click())
-    # #終了ボタン
-    # app_end_btn = tk.Button(setting_frame,text='アプリを終了',command=lambda:setting_end())
-
-    # # テキストの位置
-    # label_place = 0
-    # # ボタンの位置
-    # btn_place = form_x*(3/5)
-    # # パスワード設定の配置(y=0)
-    # password_set_label.place(x=label_place,y=0)
-    # password_now_label.place(x=label_place,y=20)# form_xの3/5の位置に配置
-    # password_set_btn.place(x=btn_place,y=0,width=100,height=30)  # form_xの2/5の位置に配置
-    # # 制限時間設定の配置
-    # limit_set_label.place(x=label_place,y=50)
-    # limit_now_label.place(x=label_place,y=70)
-    # limit_set_btn.place(x=btn_place,y=50,width=100,height=30)
-    # # 経過時間ラベルの配置
-    # limit_label.place(x=form_x*(7/10),y=form_x*(9/10))
-    # # # 計測開始ボタンの配置
-    # # time_start_btn.place(x=120,y=60)
-    # # # 計測停止ボタンの配置
-    # # time_stop_btn.place(x=120,y=100)
-    # # 再起動ボタンの配置
-    # app_restart_btn.place(x=0,y=form_y*9/10)
-    # # 終了ボタンの配置
-    # app_end_btn.place(x=form_x/2-40,y=form_y-150)
-    
-    # setting_frame.pack()
-    # setting_form.after(1000,label_update)
-    # time_start_click()
     # Selecting GUI theme - dark, light , system (for system default) 
     ctk.set_appearance_mode("white") 
 
@@ -425,11 +325,11 @@ def setting():
     setting_form.protocol("WM_DELETE_WINDOW", lambda: delete_window())
     # フレームの作成
     setting_frame = ctk.CTkFrame(setting_form)
-    setting_frame.configure(width=150, height=50)
+    setting_frame.configure(width=200, height=50)
     setting_frame.grid(row=12, column=0, pady=12, padx=10, sticky="w")
     # タイトル
-    custom_font = ctk.CTkFont(size=20)
-    label_title = ctk.CTkLabel(setting_form, text="Health-eyeS", font=custom_font) 
+    # custom_font = ctk.CTkFont(size=20)
+    label_title = ctk.CTkLabel(setting_form, text="Health-eyeS", font=("",20)) 
     label_title.grid(row=0, column=0, pady=20) 
     # 線
     label_line = ctk.CTkLabel(setting_form, text='________________________________________________________________')
@@ -437,106 +337,70 @@ def setting():
     # パスワード設定
     password_set_label = ctk.CTkLabel(setting_form, text='パスワード設定') 
     password_set_label.grid(row=2, column=0,padx=10, pady=10, sticky='w') 
-
     # 線
     label_line = ctk.CTkLabel(setting_form, text='________________________________________________________________')
     label_line.grid(row=1, column=0, pady=12, padx=10,rowspan=3) 
-    # 新しいパスワード+
+    # 新しいパスワード
     label_newpassword = ctk.CTkLabel(setting_form, text='新しいパスワード') 
     label_newpassword.grid(row=3, column=0,padx=10, pady=10, sticky='w') 
-
-    user_pass = ctk.CTkEntry(setting_form, placeholder_text="半角数字4桁", show="*") 
-    user_pass.grid(row=3, column=0, pady=12, padx=10) 
-
-    button_decision = ctk.CTkButton(setting_form, text='決定', command=setting,width=50, height=5) 
-    button_decision.grid(row=4, column=0,pady=12, padx=10) 
-    # # 新しいパスワード-
-    # password_set_btn = tk.Button(setting_frame,text='パスワード設定',command=lambda:password_set_click())
+    validation = setting_form.register(on_validate)
+    # パスワードテキストボックス
+    password_entry = ctk.CTkEntry(setting_form, placeholder_text="半角数字4桁", validate="key"
+                             , validatecommand=(validation, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')) 
+    password_entry.grid(row=3, column=0, pady=12, padx=10) 
+    # パスワード決定ボタン
+    password_btn = ctk.CTkButton(setting_form, text='決定', command=lambda:pass_dicide_click(),width=50, height=5) 
+    password_btn.grid(row=4, column=0,pady=12, padx=10) 
+    
     # 線
     label_line = ctk.CTkLabel(setting_form, text='________________________________________________________________')
     label_line.grid(row=4, column=0, pady=12,padx=10,rowspan=3) 
 
-    # # 現在のパスワード
-    # if f_password =="":
-    #     password_now_label = tk.Label(setting_frame,text='パスワードを設定していません',font=("",9))
-    # else:
-    #     password_now_label = tk.Label(setting_frame,text='現在のパスワード:%s' % f_password,font=("",9))
     #制限時間の設定
     limit_set_label = ctk.CTkLabel(setting_form, text='制限時間設定')
     limit_set_label.grid(row=6, column=0, pady=10, padx=10,sticky='w')
     # 線
     label_line = ctk.CTkLabel(setting_form, text='________________________________________________________________')
     label_line.grid(row=5, column=0, pady=12, padx=10,rowspan=4)
-    # 新しい制限時間+
-    label_newtime = ctk.CTkLabel(setting_form, text='新しい制限時間') 
+    # 新しい制限時間
+    label_newtime = ctk.CTkLabel(setting_form, text='新しい制限時間')
     label_newtime.grid(row=8, column=0, pady=12, padx=10,sticky='w')
-
-    user_entry = ctk.CTkEntry(setting_form, placeholder_text="半角数字(分)") 
-    user_entry.grid(row=8, column=0, pady=12, padx=10) 
-
-    button_decision = ctk.CTkButton(setting_form, text='決定', command=setting,width=50, height=5) 
-    button_decision.grid(row=9, column=0, pady=12, padx=10,) 
-    # # 新しい制限時間-
-    # limit_set_btn = tk.Button(setting_frame,text='制限時間設定',command=lambda:limit_set_click())
-
-    # if f_limit =="":
-    #     limit_now_label = tk.Label(setting_frame,text='制限時間を設定していません',font=("",9))
-    # else:
-    #     limit_now_label = tk.Label(setting_frame,text='現在の制限時間:%s分' % f_limit,font=("",9))
+    # 制限時間テキストボックス
+    limit_entry = ctk.CTkEntry(setting_form, placeholder_text="半角数字(分)", validate="key"
+                             , validatecommand=(validation, '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')) 
+    limit_entry.grid(row=8, column=0, pady=12, padx=10) 
+    # 制限時間決定ボタン
+    limit_btn = ctk.CTkButton(setting_form, text='決定', command=lambda:limit_dicide_click(),width=50, height=5) 
+    limit_btn.grid(row=9, column=0, pady=12, padx=10,) 
     # 現在の制限時間
-    label_realtime = ctk.CTkLabel(setting_form, text='現在の制限時間') 
+    if f_limit =="":
+        label_realtime = ctk.CTkLabel(setting_form, text='制限時間を設定していません')
+    else:
+        label_realtime = ctk.CTkLabel(setting_form, text='現在の制限時間:%s分' % f_limit)
     label_realtime.grid(row=9, column=0, pady=12, padx=10,sticky='e')
     # 再起動
     button_restart = ctk.CTkButton(setting_form, text='適用して再起動', command=lambda:app_restart_click()) 
     button_restart.grid(row=11, column=0, pady=5,padx=5,sticky='e')
     #経過時間
-    limit_label = ctk.CTkLabel(setting_form, text='残り時間')
+    limit_label = ctk.CTkLabel(setting_frame, text='残り時間')
     limit_label.grid(row=11, column=0, pady=12, padx=10,sticky='w')
     # 終了
     button_exit = ctk.CTkButton(setting_form, text='アプリを終了', command=lambda:setting_end(),fg_color='red') 
     # button_exit = ctk.CTkButton(setting_form, text='アプリを終了', command=lambda:setting_end(),fg_color='red') 
     button_exit.grid(row=12, column=0, pady=6, padx=5,sticky='e')
 
+    # setting_form.after(1000,restart_after)
+    
     # 配置配置配置配置配置配置配置配置配置配置配置配置配置配置配置配置
     # パスワード設定ラベル
-
-    # #計測開始ボタン
-    # time_start_btn = tk.Button(setting_frame,text='計測開始',command=lambda:time_start_click())
-    # #計測停止ボタン
-    # time_stop_btn = tk.Button(setting_frame,text='計測停止',command=lambda:time_stop_click())
     #再起動ボタン
     app_restart_btn = tk.Button(setting_frame,text='アプリを再起動',command=lambda:app_restart_click())
     #終了ボタン
     app_end_btn = tk.Button(setting_frame,text='アプリを終了',command=lambda:setting_end())
 
-    # # テキストの位置
-    # label_place = 0
-    # # ボタンの位置
-    # btn_place = form_x*(3/5)
-    # # パスワード設定の配置(y=0)
-    # password_set_label.place(x=label_place,y=0)
-    # password_now_label.place(x=label_place,y=20)# form_xの3/5の位置に配置
-    # password_set_btn.place(x=btn_place,y=0,width=100,height=30)  # form_xの2/5の位置に配置
-    # # 制限時間設定の配置
-    # limit_set_label.place(x=label_place,y=50)
-    # limit_now_label.place(x=label_place,y=70)
-    # limit_set_btn.place(x=btn_place,y=50,width=100,height=30)
-    # # 経過時間ラベルの配置
-    # limit_label.place(x=form_x*(7/10),y=form_x*(9/10))
-    # # # 計測開始ボタンの配置
-    # # time_start_btn.place(x=120,y=60)
-    # # # 計測停止ボタンの配置
-    # # time_stop_btn.place(x=120,y=100)
-    # # 再起動ボタンの配置
-    # app_restart_btn.place(x=0,y=form_y*9/10)
-    # # 終了ボタンの配置
-    # app_end_btn.place(x=form_x/2-40,y=form_y-150)
-    
-    # setting_frame.pack()
     setting_form.after(1000,label_update)
     time_start_click()
-
-
+    
     setting_form.mainloop()
 
 def clock_thread_end():
@@ -549,20 +413,20 @@ if __name__ == '__main__':
     # thread1 = threading.Thread(target=setting)
     # thread1.start()
     # 終了フラグが立つまでループ(再起動用のループ)
-    while gend.flg == 0:
-        # 再起動ボタンを押したら
-        if grestart_flg.flg == 1:
-            # 設定画面のスレッドを終了
-            thread_time_start.join()
-            print("thread_time_startを終了しました")
-            # thread1.join()
-            grestart_flg.flg = 0
-            print("再起動します")
-            gsetting_thread_end.flg = 1
-        # スレッドを終了してから再起動
-        if gsetting_thread_end.flg == 1:
-            globalfile_reset()
-            # thread1 = threading.Thread(target=setting)
-            # thread1.start()
-            print("再起動しました")
+    # while gend.flg == 0:
+    #     # 再起動ボタンを押したら
+    #     if grestart_flg.flg == 1:
+    #         # 設定画面のスレッドを終了
+    #         thread_time_start.join()
+    #         print("thread_time_startを終了しました")
+    #         # thread1.join()
+    #         grestart_flg.flg = 0
+    #         print("再起動します")
+    #         gsetting_thread_end.flg = 1
+    #     # スレッドを終了してから再起動
+    #     if gsetting_thread_end.flg == 1:
+    #         globalfile_reset()
+    #         # thread1 = threading.Thread(target=setting)
+    #         # thread1.start()
+    #         print("再起動しました")
 
