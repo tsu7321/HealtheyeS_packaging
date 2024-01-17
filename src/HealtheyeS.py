@@ -305,9 +305,6 @@ def distance(sample_Len, fw_Sample, ew_Sample, fw, ew):
 # 無限ループで読み取った映像に変化を加える（1フレームごとに区切って変化）
 # count = 0
 def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy, ex, ey, sampleLen, fwSample, ewSample, MODE):
-    def focus():
-        print("ふぉーかす")
-        root.focus_force()
     
     global thread_passbox
     global visibility_flg
@@ -384,25 +381,29 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
             else:
                 if dis_Ans == -1:
                     # ぼかしの処理
-                    toggle_visibility_on()
+                    visibility_flg = 1
+                    # toggle_visibility_on()
                     # コマンドライン
                     print('10cm以下です!近すぎます!!\n')
                     MODE = 20
                 elif dis_Ans == -2:
                     # ぼかしの処理
-                    toggle_visibility_off()
+                    visibility_flg = 0
+                    # toggle_visibility_off()
                     # if f_limit > gtime_cnt.val:
                     print('70cm以上離れています!!\n')
                     MODE = 50
                 else:
                     if dis_Ans < 30:
                         # ぼかしの処理
-                        toggle_visibility_on()
+                        visibility_flg = 1
+                        # toggle_visibility_on()
                         # コマンドライン
                         print('顔が近いので少し離れてください')
                         MODE = 20
                     elif dis_Ans >= 30:
-                        toggle_visibility_off()
+                        visibility_flg = 0
+                        # toggle_visibility_off()
                         # if f_limit > gtime_cnt.val:
                         print('%.2fcm\n' % dis_Ans)    # 小数第２位まで出力
                         MODE = 50
@@ -450,7 +451,6 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
                 
                 visibility_flg = 1
                 # toggle_visibility_on()
-                focus()
                 root.focus_force()
                 print("画面を覆う")
                 break

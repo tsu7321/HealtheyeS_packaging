@@ -58,9 +58,10 @@ def pass_open():
                     gpass_sec.flg = 1
                     formlock_off()
                     # HealtheyeS.toggle_visibility_off()
-                    passbox_form.quit()
-                    passbox_form.destroy()
+                    
+                    # passbox_form.destroy()
                     print("パスワードが一致しました")
+                    passbox_form.quit()
                     
                     # passbox_form.destroy()
                 else:

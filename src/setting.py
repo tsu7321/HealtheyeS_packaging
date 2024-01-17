@@ -167,6 +167,7 @@ def setting_end():
             print("thread_time_startを閉じました")
             print("おわりフラグ：%d" % gend.flg)
             setting_form.quit()
+            # setting_form.destroy()
             print("設定のウインドウを閉じました")
             gsetting_thread_end.flg = 1
             
@@ -188,6 +189,7 @@ def restart_after():
         grestart_flg.flg = 0
     elif gpass_sec.flg == 1:
         password_input.passbox_form.quit()
+        setting_form.quit()
     else:
         setting_form.after(1000,restart_after)
         
@@ -429,4 +431,3 @@ if __name__ == '__main__':
     #         # thread1 = threading.Thread(target=setting)
     #         # thread1.start()
     #         print("再起動しました")
-
