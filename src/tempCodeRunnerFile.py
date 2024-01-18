@@ -1,2 +1,2 @@
 
-    # root.attributes("-topmost", True)
+    global visibility_flg

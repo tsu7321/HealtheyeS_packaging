@@ -90,7 +90,7 @@ def passbox_tk():
     passbox_form.geometry("350x250")
     passbox_form.title("パスワード入力")
     # 常に最前面に表示
-    passbox_form.attributes("-topmost", True)
+    # passbox_form.attributes("-topmost", True)
     
     
     # #×で閉じられないようにする

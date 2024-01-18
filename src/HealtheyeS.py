@@ -145,6 +145,11 @@ def toggle_visibility_off():
 #         # root.quit()
 #         pass
 #     root.after(100,endroot)
+def on_root_click(event):
+    print("rootをクリックしました")
+    password_input.passbox_form.attributes("-topmost", True)
+    # アクティブに
+    password_input.passbox_form.focus_force()
 def rootwin():
     global root
     global visibility_flg
@@ -168,10 +173,11 @@ def rootwin():
     # タスクバー
     # root.overrideredirect(True)
     # 最前面
-    # root.attributes("-topmost", True)
+    root.attributes("-topmost", True)
     # ウィンドウ移動、サイズ変更の無効
-    root.bind("<B1-Motion>", lambda event: "break")
-    root.bind("<Configure>", lambda event: "break")
+    # root.bind("<B1-Motion>", lambda event: "break")
+    # root.bind("<Configure>", lambda event: "break")
+    root.bind("<Button-1>", on_root_click)
     toggle_visibility_off()
     visibility_flg = 0
     # root.after(100,endroot)
@@ -587,7 +593,7 @@ print("カメラを起動しました")
 #     print("終了します")
     
 restart_app()
-if gend.flg == 1 and newend_flg == 1:
+if newend_flg == 1:
     print("thread_cameraを終了します")
     thread_camera.join()
     print("thread_cameraを終了待ち")

@@ -382,7 +382,7 @@ def setting():
     label_realtime.grid(row=9, column=0, pady=12, padx=10,sticky='e')
     # 再起動
     button_restart = ctk.CTkButton(setting_form, text='適用して再起動', command=lambda:app_restart_click()) 
-    button_restart.grid(row=11, column=0, pady=5,padx=5,sticky='e')
+    # button_restart.grid(row=11, column=0, pady=5,padx=5,sticky='e')
     #経過時間
     limit_label = ctk.CTkLabel(setting_frame, text='残り時間')
     limit_label.grid(row=11, column=0, pady=12, padx=10,sticky='w')
@@ -391,7 +391,7 @@ def setting():
     # button_exit = ctk.CTkButton(setting_form, text='アプリを終了', command=lambda:setting_end(),fg_color='red') 
     button_exit.grid(row=12, column=0, pady=6, padx=5,sticky='e')
 
-    # setting_form.after(1000,restart_after)
+    setting_form.after(1000,restart_after)
     
     # 配置配置配置配置配置配置配置配置配置配置配置配置配置配置配置配置
     # パスワード設定ラベル
