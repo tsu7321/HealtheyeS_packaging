@@ -90,14 +90,6 @@ def restart_after():
     elif gend.flg == 1:
         if gsetting_thread_end.flg == 1:
             print("settingend通った")
-            # password_input.passbox_form.quit()
-            # setting.setting_form.quit()
-            # setting.setting_form.destroy()
-            # print("設定のウインドウを閉じました")
-            # setting.time_stop_click()
-            # print("タイマーを止めました")
-            # setting.setting_form.quit()
-            # setting.setting_form.destroy()
             
             print("rootを終了します")
             # pass
@@ -107,8 +99,7 @@ def restart_after():
             # thread_app.join()
             print("thread_appを終了しました")
             newend_flg = 1
-                
-                
+
         else:
             print("通った")
             # password_input.passbox_form.quit()
@@ -147,6 +138,7 @@ def toggle_visibility_off():
 #     root.after(100,endroot)
 def on_root_click(event):
     print("rootをクリックしました")
+    root.attributes("-topmost", False)
     password_input.passbox_form.attributes("-topmost", True)
     # アクティブに
     password_input.passbox_form.focus_force()
@@ -424,20 +416,6 @@ def HealtheyeS(mode_cnt, fw_count, ew_count, fw, ew, dis_Ans, textChange, fx, fy
         # cv2.imshow('gray', gray)
         # 画像の表示
         # cv2.imshow('YourFace', frame)
-
-        # # キー入力を10ms待つ
-        # # 「Esc」を押すと無限ループから抜けて終了処理に移る
-        # key = cv2.waitKey(10)
-        # if key == 27:
-        #     break
-        # elif key == ord('0'):       # 「0」を押すと距離が即座に出る
-        #     dis_Ans = distance(sampleLen, fwSample, ewSample, fw, ew)
-        #     print('%.2fcm\n' % dis_Ans)
-        # elif key == ord('1'):
-        #     if textChange == 0:     # 現在cmのテキストを頭上に表示している場合、画面上部に固定化する
-        #         textChange = 1
-        #     else:                  # 現在cmのテキストを画面上部に固定化している場合、頭上に表示する
-        #         textChange = 0
     #time_limitの変更箇所-----------------------------------------
 
         #制限時間を超えたらパスワード入力画面を表示

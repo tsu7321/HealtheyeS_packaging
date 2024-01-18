@@ -128,10 +128,18 @@ def label_update():
     # limitlablがないときの例外処理
     if nokoritime <= 0:
         nokoritime = 0
+        h = 0
+        m = 0
+        s = 0
     else:
         nokoritime -= 1
+        h = nokoritime // 3600
+        m = (nokoritime % 3600) // 60
+        s = nokoritime % 60
     try:
-        limit_label.configure(text='残り時間:%d' % nokoritime)
+        # limit_label.configure(text='残り時間:%d' % nokoritime)
+        limit_label.configure(text='残り時間:{:02}:{:02}:{:02}'.format(h,m,s))
+
         # print("経過時間:%d" % gtime_cnt.val)
     except NameError:
         pass
@@ -155,7 +163,10 @@ def setting_end():
             # print("setting endflg:%d" % gend.flg)
             thread_time_start.join()
             print("thread_time_startを閉じました")
-            
+            print("おわりフラグ：%d" % gend.flg)
+            setting_form.quit()
+            print("設定のウインドウを閉じました")
+            gsetting_thread_end.flg = 1
             # setting_form.destroy()
         else:
         # print(gpass_sec.flg)
@@ -165,9 +176,8 @@ def setting_end():
             gend.flg = 1 #終了フラグを立てる
             thread_time_start.join()
             print("thread_time_startを閉じました")
-            print("おわりフラグ：%d" % gend.flg)
+            print("endフラグ：%d" % gend.flg)
             setting_form.quit()
-            # setting_form.destroy()
             print("設定のウインドウを閉じました")
             gsetting_thread_end.flg = 1
             
@@ -188,12 +198,13 @@ def restart_after():
         setting()
         grestart_flg.flg = 0
     elif gpass_sec.flg == 1:
+        print("設定画面を閉じます")
         password_input.passbox_form.quit()
         setting_form.quit()
+        print("設定画面を閉じました")
     else:
         setting_form.after(1000,restart_after)
         
-    
 def setting():
     global gend
     global setting_form
@@ -257,9 +268,9 @@ def setting():
             return
         else:
             #分
-            # limit_minut = int(limit) * 60
+            limit_minut = int(limit) * 60
             #秒
-            limit_minut = int(limit)
+            # limit_minut = int(limit)
             # 制限時間をlimit.txtに保存
             f = open('src/limit.txt', 'w')
             f.write(str(limit_minut))
@@ -304,7 +315,8 @@ def setting():
     f_password = fp.read()
     fp.close()
     
-    nokoritime = int(f_limit)
+    nokoritime = int(f_limit) - 10
+    nowlimit = int(f_limit)
     
     # Selecting GUI theme - dark, light , system (for system default) 
     ctk.set_appearance_mode("white") 
@@ -378,7 +390,7 @@ def setting():
     if f_limit =="":
         label_realtime = ctk.CTkLabel(setting_form, text='制限時間を設定していません')
     else:
-        label_realtime = ctk.CTkLabel(setting_form, text='現在の制限時間:%s分' % f_limit)
+        label_realtime = ctk.CTkLabel(setting_form, text='現在の制限時間:%s分' % (nowlimit // 60))
     label_realtime.grid(row=9, column=0, pady=12, padx=10,sticky='e')
     # 再起動
     button_restart = ctk.CTkButton(setting_form, text='適用して再起動', command=lambda:app_restart_click()) 

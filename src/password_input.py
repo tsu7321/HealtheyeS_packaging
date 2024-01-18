@@ -39,15 +39,14 @@ def pass_open():
         # password.txtを読み込んでパスワードを取得
         f = open('src/password.txt', 'r')
         password = f.read()
-        # print(password)
-        # print(input_pass)
         # パスワードが設定されていない場合スキップする
         if password == "":
             f.close()
             gpass_sec.flg = 1
             formlock_off()
+            print("パスワードを設定していないためスキップしやした")
             passbox_form.quit()
-            passbox_form.destroy()
+            # passbox_form.destroy()
         else:
             # パスワードが設定されている場合
             if input_pass != "":
